@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { getCategories, getFoods } from '../services/api';
 import { CartContext } from '../context/CartContext'; // Import CartContext
+import { toast } from 'react-toastify'; // Import toast
 
 const Home = () => {
   const [categories, setCategories] = useState([]);
@@ -23,6 +24,18 @@ const Home = () => {
     };
     fetchData();
   }, [selectedCategory]);
+
+  const handleAddToCart = (food) => {
+    addToCart(food);
+    toast.success(`${food.name} has been added to your cart!`, {
+      position: 'top-right',
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
+  };
 
   return (
     <div className="p-4">
@@ -48,7 +61,7 @@ const Home = () => {
             <p className="text-gray-600">{food.description}</p>
             <p className="text-green-500 font-bold">{food.price} VND</p>
             <button
-              onClick={() => addToCart(food)}
+              onClick={() => handleAddToCart(food)}
               className="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
             >
               Add to Cart

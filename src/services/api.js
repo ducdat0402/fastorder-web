@@ -35,37 +35,54 @@ api.interceptors.response.use(
 );
 
 export const login = (email, password) =>
-  api.post('/login', { email, password }).then((res) => res.data);
+  api.post('/api/login', { email, password }).then((res) => res.data);
 
 export const register = (name, email, password, phone) =>
-  api.post('/register', { name, email, password, phone }).then((res) => res.data);
+  api.post('/api/register', { name, email, password, phone }).then((res) => res.data);
 
 export const getCategories = () =>
-  api.get('/categories').then((res) => res.data);
+  api.get('/api/categories').then((res) => res.data);
 
 export const getFoods = (categoryId) =>
-  api.get(`/foods${categoryId ? `?category_id=${categoryId}` : ''}`).then((res) => res.data);
+  api.get(`/api/foods${categoryId ? `?category_id=${categoryId}` : ''}`).then((res) => res.data);
 
 export const createFood = (food) =>
-  api.post('/foods', food).then((res) => res.data);
+  api.post('/api/foods', food).then((res) => res.data);
 
 export const updateFood = (id, food) =>
-  api.put(`/foods/${id}`, food).then((res) => res.data);
+  api.put(`/api/foods/${id}`, food).then((res) => res.data);
 
 export const deleteFood = (id) =>
-  api.delete(`/foods/${id}`).then((res) => res.data);
+  api.delete(`/api/foods/${id}`).then((res) => res.data);
 
 export const placeOrder = (items) =>
-  api.post('/orders', { items }).then((res) => res.data);
+  api.post('/api/orders', { items }).then((res) => res.data);
 
 export const getOrders = () =>
-  api.get('/orders').then((res) => res.data);
+  api.get('/api/orders').then((res) => res.data);
 
 export const getAllOrders = () =>
-  api.get('/admin/orders').then((res) => res.data);
+  api.get('/api/admin/orders').then((res) => res.data);
 
 export const createPayment = (payment) =>
-  api.post('/payments', payment).then((res) => res.data);
+  api.post('/api/payments', payment).then((res) => res.data);
 
 export const getTicket = (orderId) =>
-  api.get(`/tickets/${orderId}`).then((res) => res.data);
+  api.get(`/api/tickets/${orderId}`).then((res) => res.data);
+
+// API mới: Lấy chi tiết đơn hàng
+export const getAdminOrderDetails = (orderId) =>
+  api.get(`/api/admin/orders/${orderId}`).then((res) => res.data);
+
+// API mới: Cập nhật trạng thái đơn hàng
+export const updateOrderStatus = (orderId, status) =>
+  api.put(`/api/admin/orders/${orderId}/status`, { status }).then((res) => res.data);
+
+//số lượng món ăn đã xác nhận
+export const getConfirmedFoods = () => api.get('/api/admin/foods-confirmed').then((res) => res.data);
+
+export const getPaymentByOrder = (orderId) =>
+  api.get(`/api/payments/order/${orderId}`).then((res) => res.data);
+
+export const cancelOrder = (orderId) =>
+  api.delete(`/api/orders/${orderId}/cancel`).then((res) => res.data);

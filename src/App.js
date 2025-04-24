@@ -11,6 +11,8 @@ import OrderAdmin from './pages/OrderAdmin';
 import Ticket from './pages/Ticket';
 import Admin from './pages/Admin';
 import { CartProvider } from './context/CartContext'; // Import CartProvider
+import { ToastContainer } from 'react-toastify'; // Thêm ToastContainer
+import 'react-toastify/dist/ReactToastify.css';
 
 // Component để xử lý chuyển hướng sau khi đăng nhập
 const RedirectAfterLogin = ({ user, setUser }) => {
@@ -63,6 +65,17 @@ const App = () => {
             <Route path="/ticket/:orderId" element={user?.id ? <Ticket /> : <Login setUser={setUser} />} />
             <Route path="/admin" element={user?.role === 'admin' ? <Admin /> : <Login setUser={setUser} />} />
           </Routes>
+          <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
         </div>
       </Router>
     </CartProvider>
