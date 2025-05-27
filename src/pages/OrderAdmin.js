@@ -4,12 +4,12 @@ import { toast } from 'react-toastify';
 import ReactPaginate from 'react-paginate';
 import '../pagination.css';
 
-const AdminDashboard = () => {
+const OrderAdmin = () => {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [error, setError] = useState(null);
   const [orderDetails, setOrderDetails] = useState(null);
-  const [confirmedFoods, setConfirmedFoods] = useState([]); // Thêm state để lưu danh sách món ăn
+  const [confirmedFoods, setConfirmedFoods] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
@@ -19,13 +19,26 @@ const AdminDashboard = () => {
     const fetchOrders = async () => {
       try {
         const response = await getAllOrders();
-        setOrders(response);
-        setFilteredOrders(response);
+        // Lọc bỏ đơn hàng trạng thái 'scanned'
+        const nonScannedOrders = response.filter(order => order.status !== 'scanned');
+        setOrders(nonScannedOrders);
+        setFilteredOrders(nonScannedOrders);
         setError(null);
+        if (nonScannedOrders.length === 0) {
+          toast.info('No orders found.', {
+            position: 'top-right',
+            autoClose: 3000,
+          });
+        }
       } catch (err) {
-        setError(err.response?.data?.error || 'Failed to load orders. Please try again later.');
+        const errorMessage = err.response?.data?.error || 'Failed to load orders. Please try again later.';
+        setError(errorMessage);
         setOrders([]);
         setFilteredOrders([]);
+        toast.error(errorMessage, {
+          position: 'top-right',
+          autoClose: 3000,
+        });
       }
     };
 
@@ -35,11 +48,15 @@ const AdminDashboard = () => {
         setConfirmedFoods(response);
       } catch (err) {
         console.error('Failed to load confirmed foods:', err);
+        toast.error('Failed to load confirmed foods.', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
       }
     };
 
     fetchOrders();
-    fetchConfirmedFoods(); // Gọi API để lấy danh sách món ăn
+    fetchConfirmedFoods();
   }, []);
 
   useEffect(() => {
@@ -66,7 +83,12 @@ const AdminDashboard = () => {
       const details = await getAdminOrderDetails(orderId);
       setOrderDetails(details);
     } catch (err) {
-      setError('Failed to load order details: ' + (err.response?.data?.error || 'Unknown error'));
+      const errorMessage = err.response?.data?.error || 'Failed to load order details.';
+      setError(errorMessage);
+      toast.error(errorMessage, {
+        position: 'top-right',
+        autoClose: 3000,
+      });
     }
   };
 
@@ -80,9 +102,10 @@ const AdminDashboard = () => {
       const updatedOrders = orders.map((order) =>
         order.id === orderId ? { ...order, status: newStatus } : order
       );
-      setOrders(updatedOrders);
-      setFilteredOrders(updatedOrders);
-      // Cập nhật lại danh sách món ăn khi trạng thái thay đổi
+      // Lọc lại để đảm bảo không bao gồm 'scanned'
+      const nonScannedOrders = updatedOrders.filter(order => order.status !== 'scanned');
+      setOrders(nonScannedOrders);
+      setFilteredOrders(nonScannedOrders);
       const response = await getConfirmedFoods();
       setConfirmedFoods(response);
       toast.success(`Order ${orderId} status updated to ${newStatus}!`, {
@@ -90,7 +113,8 @@ const AdminDashboard = () => {
         autoClose: 3000,
       });
     } catch (err) {
-      toast.error('Failed to update status: ' + (err.response?.data?.error || 'Unknown error'), {
+      const errorMessage = err.response?.data?.error || 'Failed to update status.';
+      toast.error(errorMessage, {
         position: 'top-right',
         autoClose: 3000,
       });
@@ -105,6 +129,8 @@ const AdminDashboard = () => {
         return 'text-blue-500';
       case 'completed':
         return 'text-green-500';
+      case 'scanned':
+        return 'text-red-500';
       default:
         return 'text-gray-500';
     }
@@ -120,15 +146,8 @@ const AdminDashboard = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Admin Dashboard - Manage Orders</h1>
+      <h1 className="text-2xl font-bold mb-4">Admin Orders</h1>
 
-      {/* Thanh navigation (giả lập) */}
-      <nav className="bg-gray-800 text-white p-4 mb-4">
-        <h2 className="text-lg font-semibold">Confirmed Food</h2>
-        {/* Thêm các liên kết navigation nếu cần */}
-      </nav>
-
-      {/* Hiển thị danh sách món ăn đã xác nhận */}
       <div className="mb-6 p-4 bg-gray-100 rounded-lg shadow">
         {confirmedFoods.length > 0 ? (
           <ul className="list-disc pl-5">
@@ -143,7 +162,6 @@ const AdminDashboard = () => {
         )}
       </div>
 
-      {/* Tìm kiếm và lọc */}
       <div className="mb-4 flex flex-col sm:flex-row gap-4">
         <input
           type="text"
@@ -273,4 +291,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default OrderAdmin;

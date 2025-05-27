@@ -10,8 +10,11 @@ import Orders from './pages/Orders';
 import OrderAdmin from './pages/OrderAdmin';
 import Ticket from './pages/Ticket';
 import Admin from './pages/Admin';
-import { CartProvider } from './context/CartContext'; // Import CartProvider
-import { ToastContainer } from 'react-toastify'; // Thêm ToastContainer
+import ScannedOrders from './pages/ScannedOrders';
+import AdminScannedOrders from './pages/AdminScannedOrders';
+import AdminScanQR from './pages/AdminScanQR';
+import { CartProvider } from './context/CartContext';
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 // Component để xử lý chuyển hướng sau khi đăng nhập
@@ -57,25 +60,43 @@ const App = () => {
           <Header setUser={setUser} />
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/login" element={user?.id ? <RedirectAfterLogin user={user} setUser={setUser} /> : <Login setUser={setUser} />} />
-            <Route path="/register" element={user?.id ? <RedirectAfterLogin user={user} setUser={setUser} /> : <Register setUser={setUser} />} />
+            <Route
+              path="/login"
+              element={user?.id ? <RedirectAfterLogin user={user} setUser={setUser} /> : <Login setUser={setUser} />}
+            />
+            <Route
+              path="/register"
+              element={user?.id ? <RedirectAfterLogin user={user} setUser={setUser} /> : <Register setUser={setUser} />}
+            />
             <Route path="/cart" element={user?.id ? <Cart /> : <Login setUser={setUser} />} />
             <Route path="/orders" element={user?.id ? <Orders /> : <Login setUser={setUser} />} />
-            <Route path="/order-admin" element={user?.role === 'admin' ? <OrderAdmin /> : <Login setUser={setUser} />} />
+            <Route path="/scanned-orders" element={user?.id ? <ScannedOrders /> : <Login setUser={setUser} />} />
+            <Route
+              path="/order-admin"
+              element={user?.role === 'admin' ? <OrderAdmin /> : <Login setUser={setUser} />}
+            />
             <Route path="/ticket/:orderId" element={user?.id ? <Ticket /> : <Login setUser={setUser} />} />
             <Route path="/admin" element={user?.role === 'admin' ? <Admin /> : <Login setUser={setUser} />} />
+            <Route
+              path="/admin/scanned-orders"
+              element={user?.role === 'admin' ? <AdminScannedOrders /> : <Login setUser={setUser} />}
+            />
+            <Route
+              path="/admin/scan-qr"
+              element={user?.role === 'admin' ? <AdminScanQR /> : <Login setUser={setUser} />}
+            />
           </Routes>
           <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-        />
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
         </div>
       </Router>
     </CartProvider>
