@@ -86,3 +86,32 @@ export const getPaymentByOrder = (orderId) =>
 
 export const cancelOrder = (orderId) =>
   api.delete(`/api/orders/${orderId}/cancel`).then((res) => res.data);
+
+export const getScannedOrders = async () => {
+  const response = await api.get('/api/scanned-orders');
+  return response.data;
+};
+
+export const getAdminScannedOrders = async () => {
+  const response = await api.get('/api/admin/scanned-orders');
+  return response.data;
+};
+
+export const scanQR = async (ticket_code) => {
+  try {
+    if (!ticket_code) {
+      throw new Error('Ticket code is required');
+    }
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No token found. Please log in.');
+    }
+    console.log('Sending scanQR request with ticket_code:', ticket_code); // Debug
+    const response = await api.post('/api/admin/scan-qr', { ticket_code });
+    console.log('scanQR response:', response.data); // Debug
+    return response.data;
+  } catch (err) {
+    console.error('scanQR error:', err.response?.data || err.message); // Debug
+    throw err; // Ném lỗi để AdminScanQR.js xử lý
+  }
+};

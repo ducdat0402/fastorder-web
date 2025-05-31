@@ -66,6 +66,13 @@ const Cart = () => {
         method,
         amount: totalAmount,
       });
+
+      if (method === 'online' && paymentResponse.payment_url) {
+        // Chuyển hướng đến trang thanh toán VNPay
+        window.location.href = paymentResponse.payment_url;
+        return;
+      }
+
       setPaymentResult(paymentResponse);
 
       const ticketResponse = await getTicket(orderId);
@@ -279,7 +286,7 @@ const Cart = () => {
                     disabled={loading}
                     className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:bg-gray-400 transition duration-200"
                   >
-                    {loading ? 'Processing...' : 'Pay Online'}
+                    {loading ? 'Processing...' : 'Pay Online (VNPay)'}
                   </button>
                 </div>
                 <button

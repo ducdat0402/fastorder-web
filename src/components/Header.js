@@ -1,10 +1,10 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CartContext } from '../context/CartContext'; // Import CartContext
+import { CartContext } from '../context/CartContext';
 
 const Header = ({ setUser }) => {
   const navigate = useNavigate();
-  const { getCartCount } = useContext(CartContext); // Sử dụng CartContext để lấy số lượng giỏ hàng
+  const { getCartCount } = useContext(CartContext);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -55,12 +55,20 @@ const Header = ({ setUser }) => {
             <>
               <span className="mr-4">Hello, {user.name}</span>
               {user.role !== 'admin' && (
-                <Link
-                  to="/cart"
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
-                >
-                  Cart ({getCartCount()})
-                </Link>
+                <>
+                  <Link
+                    to="/cart"
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                  >
+                    Cart ({getCartCount()})
+                  </Link>
+                  <Link
+                    to="/scanned-orders"
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
+                  >
+                    Scanned Orders
+                  </Link>
+                </>
               )}
               <Link
                 to={user.role === 'admin' ? '/order-admin' : '/orders'}
@@ -69,12 +77,26 @@ const Header = ({ setUser }) => {
                 {user.role === 'admin' ? 'Order Admin' : 'Orders'}
               </Link>
               {user.role === 'admin' && (
-                <Link
-                  to="/admin"
-                  className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded"
-                >
-                  Admin
-                </Link>
+                <>
+                  <Link
+                    to="/admin"
+                    className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded"
+                  >
+                    Admin
+                  </Link>
+                  <Link
+                    to="/admin/scanned-orders"
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded"
+                  >
+                    Admin Scanned Orders
+                  </Link>
+                  <Link
+                    to="/admin/scan-qr"
+                    className="bg-teal-500 hover:bg-teal-600 text-white px-3 py-1 rounded"
+                  >
+                    Scan QR
+                  </Link>
+                </>
               )}
               <button
                 onClick={handleLogout}
@@ -101,13 +123,22 @@ const Header = ({ setUser }) => {
             <div className="flex flex-col">
               <span className="px-4 py-2 text-gray-300">Hello, {user.name}</span>
               {user.role !== 'admin' && (
-                <Link
-                  to="/cart"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="px-4 py-2 hover:bg-gray-600 rounded-t-md"
-                >
-                  Cart ({getCartCount()})
-                </Link>
+                <>
+                  <Link
+                    to="/cart"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="px-4 py-2 hover:bg-gray-600"
+                  >
+                    Cart ({getCartCount()})
+                  </Link>
+                  <Link
+                    to="/scanned-orders"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="px-4 py-2 hover:bg-gray-600"
+                  >
+                    Scanned Orders
+                  </Link>
+                </>
               )}
               <Link
                 to={user.role === 'admin' ? '/order-admin' : '/orders'}
@@ -117,13 +148,29 @@ const Header = ({ setUser }) => {
                 {user.role === 'admin' ? 'Order Admin' : 'Orders'}
               </Link>
               {user.role === 'admin' && (
-                <Link
-                  to="/admin"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="px-4 py-2 hover:bg-gray-600"
-                >
-                  Admin
-                </Link>
+                <>
+                  <Link
+                    to="/admin"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="px-4 py-2 hover:bg-gray-600"
+                  >
+                    Admin
+                  </Link>
+                  <Link
+                    to="/admin/scanned-orders"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="px-4 py-2 hover:bg-gray-600"
+                  >
+                    Admin Scanned Orders
+                  </Link>
+                  <Link
+                    to="/admin/scan-qr"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="px-4 py-2 hover:bg-gray-600"
+                  >
+                    Scan QR
+                  </Link>
+                </>
               )}
               <button
                 onClick={handleLogout}

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getOrders, getTicket, getPaymentByOrder, createPayment, cancelOrder } from '../services/api';
 import { QRCodeCanvas } from 'qrcode.react';
+import { toast } from 'react-toastify';
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -12,10 +14,19 @@ const Orders = () => {
   const [paymentResult, setPaymentResult] = useState(null);
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchOrdersAndPayments = async () => {
       try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('Please log in to view your orders.');
+          navigate('/login');
+          return;
+        }
+
         const ordersResponse = await getOrders();
         setOrders(ordersResponse);
         setError(null);
@@ -26,17 +37,42 @@ const Orders = () => {
             const payment = await getPaymentByOrder(order.id);
             paymentInfos[order.id] = { status: payment.status, method: payment.method };
           } catch (err) {
-            paymentInfos[order.id] = null; // Nếu chưa có thanh toán
+            paymentInfos[order.id] = null;
           }
         }
         setPaymentInfo(paymentInfos);
       } catch (err) {
+        console.error('Error fetching orders:', err);
         setError(err.response?.data?.error || 'Failed to load orders. Please try again later.');
         setOrders([]);
+        if (err.response?.status === 401) {
+          localStorage.removeItem('token');
+          navigate('/login');
+        }
       }
     };
+
     fetchOrdersAndPayments();
-  }, []);
+
+    const params = new URLSearchParams(location.search);
+    const paymentStatus = params.get('payment');
+    if (paymentStatus === 'success') {
+      toast.success('Payment successful! Your order is completed.', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+    } else if (paymentStatus === 'failed') {
+      toast.error('Payment failed. Please try again.', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+    } else if (paymentStatus === 'cancelled') {
+      toast.warn('Payment was cancelled. Please try again.', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+    }
+  }, [location, navigate]);
 
   const handleViewTicket = async (orderId) => {
     try {
@@ -62,9 +98,15 @@ const Orders = () => {
           delete updated[orderId];
           return updated;
         });
-        alert('Order cancelled successfully!');
+        toast.success('Order cancelled successfully!', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
       } catch (err) {
-        alert('Failed to cancel order: ' + (err.response?.data?.error || 'Unknown error'));
+        toast.error('Failed to cancel order: ' + (err.response?.data?.error || 'Unknown error'), {
+          position: 'top-right',
+          autoClose: 3000,
+        });
       }
     }
   };
@@ -77,16 +119,28 @@ const Orders = () => {
         method,
         amount: selectedOrder.total_price,
       });
+
+      if (method === 'online' && paymentResponse.payment_url) {
+        window.location.href = paymentResponse.payment_url;
+        return;
+      }
+
       setPaymentResult(paymentResponse);
 
+      // Lấy ticket và kiểm tra
       const ticketResponse = await getTicket(selectedOrder.id);
+      if (!ticketResponse || !ticketResponse.ticket_code) {
+        throw new Error('Failed to retrieve a valid ticket code.');
+      }
       setTicket(ticketResponse);
+      console.log('Ticket retrieved:', ticketResponse); // Debug
 
       setPaymentInfo((prev) => ({
         ...prev,
         [selectedOrder.id]: { status: paymentResponse.status, method: paymentResponse.method },
       }));
 
+      // Cập nhật trạng thái đơn hàng
       const updatedOrders = orders.map((o) =>
         o.id === selectedOrder.id
           ? { ...o, status: method === 'online' ? 'completed' : 'confirmed' }
@@ -94,9 +148,16 @@ const Orders = () => {
       );
       setOrders(updatedOrders);
 
-      alert('Payment processed successfully! Please show the QR code at the canteen.');
+      toast.success('Payment processed successfully! Please show the QR code at the canteen.', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
     } catch (err) {
-      alert('Failed to process payment: ' + (err.response?.data?.error || 'Unknown error'));
+      console.error('Payment error:', err); // Debug
+      toast.error('Failed to process payment: ' + (err.response?.data?.error || err.message || 'Unknown error'), {
+        position: 'top-right',
+        autoClose: 3000,
+      });
     } finally {
       setLoading(false);
     }
@@ -122,7 +183,10 @@ const Orders = () => {
       link.download = `ticket_${ticketCode}.png`;
       link.click();
     } else {
-      alert('QR Code not found. Please try again.');
+      toast.error('QR Code not found. Please try again.', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
     }
   };
 
@@ -134,6 +198,10 @@ const Orders = () => {
         return 'text-blue-500';
       case 'completed':
         return 'text-green-500';
+      case 'cancelled':
+        return 'text-red-500';
+      case 'scanned':
+        return 'text-red-500';
       default:
         return 'text-gray-500';
     }
@@ -172,8 +240,7 @@ const Orders = () => {
                     >
                       View Ticket
                     </button>
-                    {/* Hiển thị nút Payment nếu đơn hàng ở trạng thái pending hoặc confirmed với phương thức cash */}
-                    {(order.status === 'pending' || (order.status === 'confirmed' && paymentInfo[order.id]?.method === 'cash')) && (
+                    {(order.status === 'pending' || order.status === 'cancelled' || (order.status === 'confirmed' && paymentInfo[order.id]?.method === 'cash')) && (
                       <button
                         onClick={() => handlePayOrder(order)}
                         className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded transition duration-200"
@@ -181,8 +248,7 @@ const Orders = () => {
                         Payment
                       </button>
                     )}
-                    {/* Hiển thị nút Cancel nếu đơn hàng ở trạng thái pending */}
-                    {order.status === 'pending' && (
+                    {(order.status === 'pending' || order.status === 'cancelled') && (
                       <button
                         onClick={() => handleCancelOrder(order.id)}
                         className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition duration-200"
@@ -198,7 +264,6 @@ const Orders = () => {
         </div>
       )}
 
-      {/* Modal hiển thị mã QR */}
       {selectedTicket && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
@@ -243,7 +308,6 @@ const Orders = () => {
         </div>
       )}
 
-      {/* Modal thanh toán */}
       {showPaymentModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
@@ -328,7 +392,7 @@ const Orders = () => {
                     disabled={loading}
                     className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:bg-gray-400 transition duration-200"
                   >
-                    {loading ? 'Processing...' : 'Pay Online'}
+                    {loading ? 'Processing...' : 'Pay Online (VNPay)'}
                   </button>
                 </div>
                 <button
