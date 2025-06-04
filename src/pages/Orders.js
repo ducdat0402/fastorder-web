@@ -175,20 +175,35 @@ const Orders = () => {
   };
 
   const downloadQRCode = (ticketCode) => {
-    const canvas = document.querySelector('.qr-code canvas');
-    if (canvas) {
-      const url = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `ticket_${ticketCode}.png`;
-      link.click();
-    } else {
-      toast.error('QR Code not found. Please try again.', {
-        position: 'top-right',
-        autoClose: 3000,
-      });
-    }
-  };
+  const qrDiv = document.querySelector('.qr-code');
+  const canvas = qrDiv ? qrDiv.querySelector('canvas') : null;
+  if (canvas) {
+    // Tạo canvas mới với viền trắng
+    const qrSize = canvas.width;
+    const border = 32; // px, chỉnh độ dày viền trắng ở đây
+    const newSize = qrSize + border * 2;
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = newSize;
+    tempCanvas.height = newSize;
+    const ctx = tempCanvas.getContext('2d');
+    // Vẽ nền trắng
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, newSize, newSize);
+    // Vẽ QR code vào giữa
+    ctx.drawImage(canvas, border, border, qrSize, qrSize);
+    // Tải ảnh
+    const url = tempCanvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ticket_${ticketCode}.png`;
+    link.click();
+  } else {
+    toast.error('QR Code not found. Please try again.', {
+      position: 'top-right',
+      autoClose: 3000,
+    });
+  }
+};
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -348,14 +363,25 @@ const Orders = () => {
                         {new Date(ticket.issued_at).toLocaleString()}
                       </p>
                       <div className="mt-4 flex justify-center">
-                        <div className="qr-code">
-                          <QRCodeCanvas
-                            value={ticket.ticket_code}
-                            size={200}
-                            className="border p-2 bg-white rounded-lg"
-                          />
-                        </div>
-                      </div>
+  <div
+    className="qr-code"
+    style={{
+      background: '#fff', // Đảm bảo nền trắng
+      padding: '16px',
+      border: '4px solid #000', // Viền đen ngoài
+      borderRadius: '12px',
+      display: 'inline-block'
+    }}
+  >
+    <QRCodeCanvas
+      value={ticket.ticket_code}
+      size={200}
+      bgColor="#fff" // Nền QR trắng
+      fgColor="#000" // QR đen
+      className="bg-white rounded-lg"
+    />
+  </div>
+</div>
                       <p className="text-gray-500 text-center mt-2">
                         Show this QR code at the canteen to receive your order.
                       </p>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BrowserQRCodeReader } from '@zxing/library';
+import { BrowserMultiFormatReader, NotFoundException } from '@zxing/library';
 import { scanQR } from '../services/api';
 import { toast } from 'react-toastify';
 
@@ -16,7 +16,7 @@ const AdminScanQR = () => {
   useEffect(() => {
     try {
       console.log('Initializing QR code reader...');
-      codeReader.current = new BrowserQRCodeReader();
+      codeReader.current = new BrowserMultiFormatReader();
       console.log('QR code reader initialized');
     } catch (err) {
       console.error('Initialization error:', err);
@@ -75,6 +75,16 @@ const AdminScanQR = () => {
           deviceId = currentDevice.deviceId;
           break;
         } catch (err) {
+          if (err.name === 'OverconstrainedError') {
+            // Fallback: try without deviceId
+            try {
+              stream = await navigator.mediaDevices.getUserMedia({ video: true });
+              deviceId = undefined;
+              break;
+            } catch (fallbackErr) {
+              console.warn(`Fallback camera failed: ${fallbackErr.message}`);
+            }
+          }
           console.warn(`Failed to use camera: ${err.message}`);
           if (attempt === videoInputDevices.length - 1) throw err;
         }
@@ -86,17 +96,50 @@ const AdminScanQR = () => {
       streamRef.current = stream;
       videoRef.current.srcObject = stream;
 
-      const timeoutId = setTimeout(() => {
-        console.warn('Scan timeout after 60 seconds');
-        setError('No QR code detected after 60 seconds.');
-        toast.error('No QR code detected after 60 seconds.', { position: 'top-right', autoClose: 5000 });
-        stopScanning();
-      }, 60000);
+      // Wait for video to be ready
+      await new Promise((resolve) => {
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play();
+          resolve();
+        };
+      });
 
-      const result = await codeReader.current.decodeFromInputVideoDevice(deviceId, videoRef.current);
+      // Reset code reader before scanning
+      codeReader.current.reset();
+
+      const timeoutId = setTimeout(() => {
+  console.warn('Scan timeout after 60 seconds');
+  setError('No QR code detected after 60 seconds.');
+  toast.error('No QR code detected after 60 seconds.', { position: 'top-right', autoClose: 5000 });
+  stopScanning();
+}, 60000);
+
+try {
+  // Use decodeFromVideoDevice for more reliability
+  codeReader.current.decodeFromVideoDevice(
+  deviceId,
+  videoRef.current,
+  (result, err) => {
+    if (result) {
       clearTimeout(timeoutId);
       console.log('QR code detected:', result.getText());
+      codeReader.current.reset();
       handleScan(result.getText());
+    } else if (err && !(err instanceof NotFoundException)) {
+      clearTimeout(timeoutId);
+      console.error('Scan error:', err);
+      setError('Failed to scan QR code.');
+      toast.error('Failed to scan QR code.', { position: 'top-right', autoClose: 5000 });
+      setScanning(false);
+      stopScanning();
+    }
+    // else: NotFoundException means no QR code in frame, keep scanning
+  }
+);
+} catch (scanErr) {
+  clearTimeout(timeoutId);
+  throw scanErr;
+}
     } catch (err) {
       console.error('Scan error:', err);
       let errorMessage = 'Failed to scan.';
