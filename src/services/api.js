@@ -115,3 +115,26 @@ export const scanQR = async (ticket_code) => {
     throw err; // Ném lỗi để AdminScanQR.js xử lý
   }
 };
+
+// Lấy danh sách user
+export const getAllUsers = async () => {
+  const response = await api.get('/api/users');
+  return response.data;
+};
+// Lấy tất cả món ăn cho admin
+export const getAdminFoods = async () => {
+  const response = await api.get('/api/admin/foods');
+  return response.data;
+};
+
+// Đổi quyền user
+export const updateUserRole = async (userId, role) => {
+  const response = await api.put(`/api/users/${userId}/role`, { role });
+  return response.data;
+};
+
+// Xóa user
+export const deleteUser = async (userId) => {
+  const response = await api.delete(`/api/users/${userId}`);
+  return response.data;
+};

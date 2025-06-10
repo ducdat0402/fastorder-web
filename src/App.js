@@ -16,6 +16,7 @@ import AdminScanQR from './pages/AdminScanQR';
 import { CartProvider } from './context/CartContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import AdminUser from './pages/AdminUser';
 
 // Component để xử lý chuyển hướng sau khi đăng nhập
 const RedirectAfterLogin = ({ user, setUser }) => {
@@ -76,6 +77,7 @@ const App = () => {
               element={user?.role === 'admin' ? <OrderAdmin /> : <Login setUser={setUser} />}
             />
             <Route path="/ticket/:orderId" element={user?.id ? <Ticket /> : <Login setUser={setUser} />} />
+            <Route path="/adminuser" element={<AdminUser />} />
             <Route path="/admin" element={user?.role === 'admin' ? <Admin /> : <Login setUser={setUser} />} />
             <Route
               path="/admin/scanned-orders"

@@ -196,34 +196,51 @@ try {
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Admin Scan QR</h1>
-      <div className="mb-4 flex gap-4">
+  <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100">
+    <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md flex flex-col items-center">
+      <h1 className="text-2xl font-bold mb-6 text-blue-700 text-center">Admin Scan QR</h1>
+      <div className="mb-6 flex gap-4 w-full justify-center">
         <button
           onClick={startScanning}
           disabled={scanning}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:bg-gray-400"
+          className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded transition disabled:bg-gray-400"
         >
           {scanning ? 'Scanning...' : 'Start'}
         </button>
         {scanning && (
           <button
             onClick={stopScanning}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+            className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded transition"
           >
             Stop
           </button>
         )}
       </div>
       {scanning && (
-        <div className="w-full max-w-md mx-auto mt-4">
-          <video ref={videoRef} style={{ width: '100%' }} autoPlay />
+        <div className="w-full flex justify-center mb-4">
+          <div className="rounded-lg overflow-hidden border-4 border-blue-200 shadow">
+            <video
+              ref={videoRef}
+              style={{ width: 320, height: 240, background: '#000' }}
+              autoPlay
+              className="block"
+            />
+          </div>
         </div>
       )}
-      {result && <div className="mt-4 p-4 bg-green-100 text-green-700 rounded">{result}</div>}
-      {error && <div className="mt-4 p-4 bg-red-100 text-red-700 rounded">{error}</div>}
+      {result && (
+        <div className="mt-4 p-4 bg-green-100 text-green-700 rounded w-full text-center font-semibold shadow">
+          {result}
+        </div>
+      )}
+      {error && (
+        <div className="mt-4 p-4 bg-red-100 text-red-700 rounded w-full text-center font-semibold shadow">
+          {error}
+        </div>
+      )}
     </div>
-  );
+  </div>
+);
 };
 
 export default AdminScanQR;

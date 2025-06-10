@@ -117,7 +117,7 @@ const AdminScannedOrders = () => {
                 <tr key={order.id} className="border-b">
                   <td className="p-2">{order.id}</td>
                   <td className="p-2">{order.email || 'N/A'}</td>
-                  <td className="p-2">{order.total_amount ? `${order.total_amount} VND` : 'N/A'}</td>
+                   <td className="p-2">{order.total_price} VND</td>
                   <td className={`p-2 font-semibold ${getStatusColor(order.status)}`}>{order.status}</td>
                   <td className="p-2">
                     {order.created_at ? new Date(order.created_at).toLocaleString() : 'N/A'}

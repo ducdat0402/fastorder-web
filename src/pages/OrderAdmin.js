@@ -15,6 +15,8 @@ const OrderAdmin = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const ordersPerPage = 10;
+  const [dateFrom, setDateFrom] = useState('');
+const [dateTo, setDateTo] = useState('');
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -43,6 +45,7 @@ const OrderAdmin = () => {
       }
     };
 
+    
     const fetchConfirmedFoods = async () => {
       try {
         const response = await getConfirmedFoods();
@@ -59,6 +62,37 @@ const OrderAdmin = () => {
     fetchOrders();
     fetchConfirmedFoods();
   }, []);
+
+  useEffect(() => {
+  let filtered = orders;
+
+  if (searchTerm) {
+    filtered = filtered.filter(
+      (order) =>
+        order.id.toString().includes(searchTerm) ||
+        (order.ticket_code && order.ticket_code.includes(searchTerm))
+    );
+  }
+
+  if (statusFilter) {
+    filtered = filtered.filter((order) => order.status === statusFilter);
+  }
+
+  // Lọc theo ngày
+  if (dateFrom) {
+    filtered = filtered.filter((order) => new Date(order.created_at) >= new Date(dateFrom));
+  }
+  if (dateTo) {
+    // Đảm bảo lấy hết ngày đến (tới 23:59:59)
+    const toDate = new Date(dateTo);
+    toDate.setHours(23, 59, 59, 999);
+    filtered = filtered.filter((order) => new Date(order.created_at) <= toDate);
+  }
+
+  setFilteredOrders(filtered);
+  setCurrentPage(0);
+}, [searchTerm, statusFilter, orders, dateFrom, dateTo]);
+
 
   useEffect(() => {
     let filtered = orders;
@@ -163,25 +197,39 @@ const OrderAdmin = () => {
         )}
       </div>
 
-      <div className="mb-4 flex flex-col sm:flex-row gap-4">
-        <input
-          type="text"
-          placeholder="Search by Order ID or Ticket Code..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="p-2 border rounded w-full sm:w-1/2"
-        />
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="p-2 border rounded w-full sm:w-1/4"
-        >
-          <option value="">All Statuses</option>
-          <option value="pending">Pending</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="completed">Completed</option>
-        </select>
-      </div>
+     <div className="mb-4 flex flex-col sm:flex-row gap-4">
+  <input
+    type="text"
+    placeholder="Search by Order ID or Ticket Code..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className="p-2 border rounded w-full sm:w-1/2"
+  />
+  <select
+    value={statusFilter}
+    onChange={(e) => setStatusFilter(e.target.value)}
+    className="p-2 border rounded w-full sm:w-1/4"
+  >
+    <option value="">All Statuses</option>
+    <option value="pending">Pending</option>
+    <option value="confirmed">Confirmed</option>
+    <option value="completed">Completed</option>
+  </select>
+  <input
+    type="date"
+    value={dateFrom}
+    onChange={(e) => setDateFrom(e.target.value)}
+    className="p-2 border rounded w-full sm:w-1/4"
+    placeholder="From date"
+  />
+  <input
+    type="date"
+    value={dateTo}
+    onChange={(e) => setDateTo(e.target.value)}
+    className="p-2 border rounded w-full sm:w-1/4"
+    placeholder="To date"
+  />
+</div>
 
       {error ? (
         <p className="text-red-500">{error}</p>

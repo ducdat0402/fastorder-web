@@ -85,6 +85,12 @@ const Header = ({ setUser }) => {
                     Admin
                   </Link>
                   <Link
+                    to="/adminuser"
+                    className="bg-pink-500 hover:bg-pink-600 text-white px-3 py-1 rounded"
+                  >
+                    Admin User
+                  </Link>
+                  <Link
                     to="/admin/scanned-orders"
                     className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded"
                   >
